@@ -7,6 +7,9 @@ import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import Image from "next/image";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
+import { CopyIcon } from "@radix-ui/react-icons";
+import { Button } from "./ui/Button";
 
 const LivePrices = () => {
     const { data, error } = useSWR("/api/prices", fetcher, { refreshInterval: 20000 });
@@ -43,6 +46,10 @@ const LivePrices = () => {
 
     const takeProfitPrice = activePrice + (activePrice * takeProfitPercent) / 100;
     const stopLossPrice = activePrice - (activePrice * stopLossPercent) / 100;
+
+    const onCopy = (price: number) => {
+        navigator.clipboard.writeText(price.toFixed(2));
+    }
 
     return (
         <section className="px-16 flex items-center justify-between">
@@ -95,26 +102,40 @@ const LivePrices = () => {
                 </div>
             )}
 
-            <div>
-                <div>
-                    <Label>
-                        Enter Take Profit:
-                    </Label>
-                    <Input type="number" step={0.1} value={takeProfitPercent} onChange={(e) => setTakeProfitPercent(Number(e.target.value))} />
-                    <p>
-                        Take Profit Price: ${takeProfitPrice.toFixed(2)}
-                    </p>
-                </div>
+            <div className="flex flex-col items-center justify-between space-y-2">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>
+                            Take Profit
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Input type="number" step={0.1} value={takeProfitPercent} onChange={(e) => setTakeProfitPercent(Number(e.target.value))} />
+                    </CardContent>
+                    <CardFooter className="flex items-center justify-between text-xl">
+                        {formattedPrice(takeProfitPrice)}
+                        <Button onClick={() => onCopy(takeProfitPrice)} variant="outline">
+                            <CopyIcon className="w-6 h-6" />
+                        </Button>
+                    </CardFooter>
+                </Card>
 
-                <div>
-                    <Label>
-                        Enter Stop Loss:
-                    </Label>
-                    <Input type="number" value={stopLossPercent} onChange={(e) => setStopLossPercent(Number(e.target.value))} />
-                    <p>
-                        Stop Loss Price: ${stopLossPrice.toFixed(2)}
-                    </p>
-                </div>
+                <Card>
+                    <CardHeader>
+                        <CardTitle>
+                            Stop Loss
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Input type="number" step={0.1} value={stopLossPercent} onChange={(e) => setStopLossPercent(Number(e.target.value))} />
+                    </CardContent>
+                    <CardFooter className="flex items-center justify-between text-xl">
+                        {formattedPrice(stopLossPrice)}
+                        <Button onClick={() => onCopy(stopLossPrice)} variant="outline">
+                            <CopyIcon className="w-6 h-6" />
+                        </Button>
+                    </CardFooter>
+                </Card>
             </div>
         </section>
     );
