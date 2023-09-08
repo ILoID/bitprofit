@@ -7,7 +7,7 @@ import { Label } from "./ui/label";
 import { Input } from "./ui/input";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import Image from "next/image";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "./ui/card";
 import { CopyIcon, MinusIcon, PlusIcon } from "@radix-ui/react-icons";
 import { Button } from "./ui/Button";
 
