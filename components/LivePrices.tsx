@@ -8,32 +8,22 @@ import { Input } from "./ui/input";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 import Image from "next/image";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "./ui/card";
-import { CopyIcon } from "@radix-ui/react-icons";
+import { CopyIcon, MinusIcon, PlusIcon } from "@radix-ui/react-icons";
 import { Button } from "./ui/Button";
 
 const LivePrices = () => {
     const { data, error } = useSWR("/api/prices", fetcher, { refreshInterval: 20000 });
-    
-    const [selectedCoin, setSelectedCoin] = useState("bitcoin"); // ["bitcoin", "ethereum", "custom"
-    const [customPrice, setCustomPrice] = useState(0);
-    const [takeProfitPercent, setTakeProfitPercent] = useState(0.5);
-    const [stopLossPercent, setStopLossPercent] = useState(0.5);
 
-    if (error) {
-        return (
-            <div>
-                Error
-            </div>
-        )
-    };
-    
-    if (!data) {
-        return (
-            <div>
-                Loading...
-            </div>
-        )
-    }
+    const [selectedCoin, setSelectedCoin] = useState<string>("bitcoin"); // ["bitcoin", "ethereum", "custom"]
+    const [customPrice, setCustomPrice] = useState<number>(0);
+    const [takeProfitPercent, setTakeProfitPercent] = useState<number>(0.5);
+    const [stopLossPercent, setStopLossPercent] = useState<number>(0.5);
+
+    const [percentageBase, setPercentageBase] = useState<number>(1);
+    const [applyTo, setApplyTo] = useState({ tp: true, sl: true });
+
+    if (error) return <div>failed to load</div>
+    if (!data) return <div>loading...</div>
 
     let activePrice;
     if (selectedCoin === "bitcoin") {
@@ -47,13 +37,29 @@ const LivePrices = () => {
     const takeProfitPrice = activePrice + (activePrice * takeProfitPercent) / 100;
     const stopLossPrice = activePrice - (activePrice * stopLossPercent) / 100;
 
-    const onCopy = (price: number) => {
-        navigator.clipboard.writeText(price.toFixed(2));
+    const handlePercentageClick = (percentage: number) => {
+        if (applyTo.tp) setTakeProfitPercent(percentage);
+        if (applyTo.sl) setStopLossPercent(percentage);
     }
 
-    return (
-        <section className="px-16 flex items-center justify-between">
+    const toggleApplyTo = (type: "tp" | "sl") => {
+        setApplyTo(prev => ({ ...prev, [type]: !prev[type] }));
+    };
 
+    const onCopy = (price: number) => {
+        navigator.clipboard.writeText(price.toFixed(2));
+    };
+
+    const incrementBase = () => {
+        if (percentageBase < 100) setPercentageBase(percentageBase * 10);
+    };
+
+    const decrementBase = () => {
+        if (percentageBase > 1) setPercentageBase(percentageBase / 10);
+    };
+
+    return (
+        <section className="md:px-16 lg:px-32 xl:px-64 flex items-center justify-between">
             <RadioGroup defaultValue="bitcoin" onValueChange={(value) => setSelectedCoin(value)}>
                 <div>
                     <RadioGroupItem value="bitcoin" id="bitcoin" className="sr-only peer" />
@@ -67,7 +73,7 @@ const LivePrices = () => {
                 <div>
                     <RadioGroupItem value="ethereum" id="ethereum" className="sr-only peer" />
                     <Label htmlFor="ethereum" className="flex flex-col items-center justify-between gap-2 rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
-                    <Image src="eth-icon.svg" alt="eth" width={32} height={32} />
+                        <Image src="eth-icon.svg" alt="eth" width={32} height={32} />
                         <p className="text-xl font-bold">
                             Ethereum
                         </p>
@@ -76,7 +82,7 @@ const LivePrices = () => {
                 <div>
                     <RadioGroupItem value="custom" id="custom" className="sr-only peer" />
                     <Label htmlFor="custom" className="flex flex-col items-center justify-between gap-2 rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
-                    <Image src="dollar-icon.svg" alt="btc" width={32} height={32} />
+                        <Image src="dollar-icon.svg" alt="btc" width={32} height={32} />
                         <p className="text-xl font-bold">
                             Custom Value
                         </p>
@@ -102,40 +108,75 @@ const LivePrices = () => {
                 </div>
             )}
 
-            <div className="flex flex-col items-center justify-between space-y-2">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>
-                            Take Profit
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Input type="number" step={0.1} value={takeProfitPercent} onChange={(e) => setTakeProfitPercent(Number(e.target.value))} />
-                    </CardContent>
-                    <CardFooter className="flex items-center justify-between text-xl">
-                        {formattedPrice(takeProfitPrice)}
-                        <Button onClick={() => onCopy(takeProfitPrice)} variant="outline">
-                            <CopyIcon className="w-6 h-6" />
-                        </Button>
-                    </CardFooter>
-                </Card>
 
-                <Card>
-                    <CardHeader>
-                        <CardTitle>
-                            Stop Loss
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <Input type="number" step={0.1} value={stopLossPercent} onChange={(e) => setStopLossPercent(Number(e.target.value))} />
-                    </CardContent>
-                    <CardFooter className="flex items-center justify-between text-xl">
-                        {formattedPrice(stopLossPrice)}
-                        <Button onClick={() => onCopy(stopLossPrice)} variant="outline">
-                            <CopyIcon className="w-6 h-6" />
+            <div className="flex space-x-4">
+                <div className="flex flex-col items-center justify-center space-y-16">
+                    <div className="flex flex-col space-y-2">
+                        <Button variant="outline" onClick={incrementBase}>
+                            <PlusIcon className="w-4 h-4 mr-2" />
+                            Increment Base
                         </Button>
-                    </CardFooter>
-                </Card>
+                        <Button variant="outline" onClick={decrementBase}>
+                            <MinusIcon className="w-4 h-4 mr-2" />
+                            Decrement Base
+                        </Button>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                        <Button variant="ghost" onClick={() => toggleApplyTo("tp")} className={applyTo.tp ? "bg-blue-500 hover:bg-blue-600" : ""}>
+                            Apply on TP
+                        </Button>
+                        <Button variant="ghost" onClick={() => toggleApplyTo("sl")} className={applyTo.sl ? "bg-blue-500 hover:bg-blue-600" : ""}>
+                            Apply on SL
+                        </Button>
+                    </div>
+                </div>
+                <div className="flex flex-col space-y-1">
+                    {Array.from({ length: 10 }).map((_, index) => {
+                        const value = Number(((index + 1) * 0.1 * percentageBase).toFixed(1).replace(/\.0$/, ""));
+                        return (
+                            <Button variant="outline" key={value} onClick={() => handlePercentageClick(value)} className="w-[100px]">
+                                {value}%
+                            </Button>
+                        );
+                    })}
+                </div>
+
+                <div className="flex flex-col items-center justify-between space-y-2">
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>
+                                Take Profit %
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Input type="number" step={0.1} value={takeProfitPercent} onChange={(e) => setTakeProfitPercent(Number(e.target.value))} />
+                        </CardContent>
+                        <CardFooter className="flex items-center justify-between text-xl">
+                            {formattedPrice(takeProfitPrice)}
+                            <Button onClick={() => onCopy(takeProfitPrice)} variant="outline">
+                                <CopyIcon className="w-6 h-6" />
+                            </Button>
+                        </CardFooter>
+                    </Card>
+
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>
+                                Stop Loss %
+                            </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <Input type="number" step={0.1} value={stopLossPercent} onChange={(e) => setStopLossPercent(Number(e.target.value))} />
+                        </CardContent>
+                        <CardFooter className="flex items-center justify-between text-xl">
+                            {formattedPrice(stopLossPrice)}
+                            <Button onClick={() => onCopy(stopLossPrice)} variant="outline">
+                                <CopyIcon className="w-6 h-6" />
+                            </Button>
+                        </CardFooter>
+                    </Card>
+                </div>
             </div>
         </section>
     );
