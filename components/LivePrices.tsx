@@ -1,6 +1,6 @@
 "use client";
 
-import { fetcher, formattedPrice } from "@/lib/utils";
+import { cn, fetcher, formattedPrice } from "@/lib/utils";
 import { useState } from "react";
 import useSWR from "swr";
 import { Label } from "./ui/label";
@@ -18,6 +18,7 @@ const LivePrices = () => {
     const [customPrice, setCustomPrice] = useState<number>(0);
     const [takeProfitPercent, setTakeProfitPercent] = useState<number>(0.4);
     const [stopLossPercent, setStopLossPercent] = useState<number>(0.4);
+    const [tradingDirection, setTradingDirection] = useState<"long" | "short">("long"); // ["long", "short"]
 
     const [percentageBase, setPercentageBase] = useState<number>(1);
     const [applyTo, setApplyTo] = useState({ tp: true, sl: true });
@@ -120,7 +121,16 @@ const LivePrices = () => {
 
 
             <div className="flex items-center space-x-4">
-                <div className="flex flex-col items-center justify-center space-y-16">
+                <div className="flex flex-col items-center justify-between space-y-16">
+                    <div className="flex justify-center space-x-8">
+                        <Button onClick={() => setTradingDirection("long")} variant="outline" className={cn("py-6", tradingDirection === "long" && "bg-primary hover:bg-green-600")}>
+                            LONG
+                        </Button>
+                        <Button onClick={() => setTradingDirection("short")} variant="outline" className={cn("py-6", tradingDirection === "short" && "bg-red-500 hover:bg-red-600")}>
+                            SHORT
+                        </Button>
+                    </div>
+
                     <div className="flex flex-col space-y-2">
                         <Button variant="outline" onClick={incrementBase}>
                             <PlusIcon className="w-4 h-4 mr-2" />
@@ -156,7 +166,7 @@ const LivePrices = () => {
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-lg">
-                                Take Profit
+                                {tradingDirection === "long" ? "Take Profit" : "Stop Loss"}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="flex items-center gap-6 text-xl">
@@ -164,11 +174,13 @@ const LivePrices = () => {
                             %
                         </CardContent>
                         <CardFooter className="flex items-center justify-between text-2xl font-bold">
-                            {formattedPrice(takeProfitPrice)}
+                            <p className={tradingDirection === "long" ? "text-primary" : "text-red-500"}>
+                                {formattedPrice(takeProfitPrice)}
+                            </p>
                             <Button className="relative" onClick={() => onTpCopy(takeProfitPrice)} variant="outline">
                                 <CopyIcon className="w-6 h-6" />
                                 {tpTooltipVisible && (
-                                    <span className="absolute left-1/2 transform -translate-x-1/2 -translate-y-10 bg-foreground text-white px-2 py-1 rounded-md text-xs font-bold">
+                                    <span className="absolute left-1/2 transform -translate-x-1/2 -translate-y-10 bg-primary text-white px-2 py-1 rounded-md text-xs font-bold">
                                         Copied!
                                     </span>
                                 )}
@@ -179,7 +191,7 @@ const LivePrices = () => {
                     <Card>
                         <CardHeader>
                             <CardTitle className="text-lg">
-                                Stop Loss %
+                                {tradingDirection === "long" ? "Stop Loss" : "Take Profit"}
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="flex items-center gap-6 text-xl">
@@ -187,11 +199,13 @@ const LivePrices = () => {
                             %
                         </CardContent>
                         <CardFooter className="flex items-center justify-between text-2xl font-bold">
-                            {formattedPrice(stopLossPrice)}
+                            <p className={tradingDirection === "short" ? "text-primary" : "text-red-500"}>
+                                {formattedPrice(stopLossPrice)}
+                            </p>
                             <Button className="relative" onClick={() => onSlCopy(stopLossPrice)} variant="outline">
                                 <CopyIcon className="w-6 h-6" />
                                 {slTooltipVisible && (
-                                    <span className="absolute left-1/2 transform -translate-x-1/2 -translate-y-10 bg-foreground text-white px-2 py-1 rounded-md text-xs font-bold">
+                                    <span className="absolute left-1/2 transform -translate-x-1/2 -translate-y-10 bg-primary text-white px-2 py-1 rounded-md text-xs font-bold">
                                         Copied!
                                     </span>
                                 )}
