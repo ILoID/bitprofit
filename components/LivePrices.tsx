@@ -16,11 +16,13 @@ const LivePrices = () => {
 
     const [selectedCoin, setSelectedCoin] = useState<string>("bitcoin"); // ["bitcoin", "ethereum", "custom"]
     const [customPrice, setCustomPrice] = useState<number>(0);
-    const [takeProfitPercent, setTakeProfitPercent] = useState<number>(0.5);
-    const [stopLossPercent, setStopLossPercent] = useState<number>(0.5);
+    const [takeProfitPercent, setTakeProfitPercent] = useState<number>(0.4);
+    const [stopLossPercent, setStopLossPercent] = useState<number>(0.4);
 
     const [percentageBase, setPercentageBase] = useState<number>(1);
     const [applyTo, setApplyTo] = useState({ tp: true, sl: true });
+    const [tpTooltipVisible, setTpTooltipVisible] = useState<boolean>(false);
+    const [slTooltipVisible, setSlTooltipVisible] = useState<boolean>(false);
 
     if (error) return <div>failed to load</div>
     if (!data) return <div>loading...</div>
@@ -46,8 +48,16 @@ const LivePrices = () => {
         setApplyTo(prev => ({ ...prev, [type]: !prev[type] }));
     };
 
-    const onCopy = (price: number) => {
+    const onTpCopy = (price: number) => {
         navigator.clipboard.writeText(price.toFixed(2));
+        setTpTooltipVisible(true);
+        setTimeout(() => setTpTooltipVisible(false), 2000);
+    };
+
+    const onSlCopy = (price: number) => {
+        navigator.clipboard.writeText(price.toFixed(2));
+        setSlTooltipVisible(true);
+        setTimeout(() => setSlTooltipVisible(false), 2000);
     };
 
     const incrementBase = () => {
@@ -59,7 +69,7 @@ const LivePrices = () => {
     };
 
     return (
-        <section className="md:px-16 lg:px-32 xl:px-64 flex items-center justify-between">
+        <section className="md:px-16 lg:px-32 xl:px-48 flex items-center justify-between">
             <RadioGroup defaultValue="bitcoin" onValueChange={(value) => setSelectedCoin(value)}>
                 <div>
                     <RadioGroupItem value="bitcoin" id="bitcoin" className="sr-only peer" />
@@ -109,7 +119,7 @@ const LivePrices = () => {
             )}
 
 
-            <div className="flex space-x-4">
+            <div className="flex items-center space-x-4">
                 <div className="flex flex-col items-center justify-center space-y-16">
                     <div className="flex flex-col space-y-2">
                         <Button variant="outline" onClick={incrementBase}>
@@ -145,34 +155,46 @@ const LivePrices = () => {
                 <div className="flex flex-col items-center justify-between space-y-2">
                     <Card>
                         <CardHeader>
-                            <CardTitle>
-                                Take Profit %
+                            <CardTitle className="text-lg">
+                                Take Profit
                             </CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="flex items-center gap-6 text-xl">
                             <Input type="number" step={0.1} value={takeProfitPercent} onChange={(e) => setTakeProfitPercent(Number(e.target.value))} />
+                            %
                         </CardContent>
-                        <CardFooter className="flex items-center justify-between text-xl">
+                        <CardFooter className="flex items-center justify-between text-2xl font-bold">
                             {formattedPrice(takeProfitPrice)}
-                            <Button onClick={() => onCopy(takeProfitPrice)} variant="outline">
+                            <Button className="relative" onClick={() => onTpCopy(takeProfitPrice)} variant="outline">
                                 <CopyIcon className="w-6 h-6" />
+                                {tpTooltipVisible && (
+                                    <span className="absolute left-1/2 transform -translate-x-1/2 -translate-y-10 bg-foreground text-white px-2 py-1 rounded-md text-xs font-bold">
+                                        Copied!
+                                    </span>
+                                )}
                             </Button>
                         </CardFooter>
                     </Card>
 
                     <Card>
                         <CardHeader>
-                            <CardTitle>
+                            <CardTitle className="text-lg">
                                 Stop Loss %
                             </CardTitle>
                         </CardHeader>
-                        <CardContent>
+                        <CardContent className="flex items-center gap-6 text-xl">
                             <Input type="number" step={0.1} value={stopLossPercent} onChange={(e) => setStopLossPercent(Number(e.target.value))} />
+                            %
                         </CardContent>
-                        <CardFooter className="flex items-center justify-between text-xl">
+                        <CardFooter className="flex items-center justify-between text-2xl font-bold">
                             {formattedPrice(stopLossPrice)}
-                            <Button onClick={() => onCopy(stopLossPrice)} variant="outline">
+                            <Button className="relative" onClick={() => onSlCopy(stopLossPrice)} variant="outline">
                                 <CopyIcon className="w-6 h-6" />
+                                {slTooltipVisible && (
+                                    <span className="absolute left-1/2 transform -translate-x-1/2 -translate-y-10 bg-foreground text-white px-2 py-1 rounded-md text-xs font-bold">
+                                        Copied!
+                                    </span>
+                                )}
                             </Button>
                         </CardFooter>
                     </Card>
