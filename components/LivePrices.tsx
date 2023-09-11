@@ -41,8 +41,13 @@ const LivePrices = () => {
     const stopLossPrice = activePrice - (activePrice * stopLossPercent) / 100;
 
     const handlePercentageClick = (percentage: number) => {
-        if (applyTo.tp) setTakeProfitPercent(percentage);
-        if (applyTo.sl) setStopLossPercent(percentage);
+        if (tradingDirection === "long") {
+            if (applyTo.tp) setTakeProfitPercent(percentage);
+            if (applyTo.sl) setStopLossPercent(percentage);
+        } else {
+            if (applyTo.tp) setStopLossPercent(percentage);
+            if (applyTo.sl) setTakeProfitPercent(percentage);
+        }
     }
 
     const toggleApplyTo = (type: "tp" | "sl") => {
