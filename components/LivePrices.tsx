@@ -1,6 +1,6 @@
 "use client";
 
-import { cn, fetcher, formattedPrice } from "@/lib/utils";
+import { cn, fetcher, formattedPrice, percentageValues } from "@/lib/utils";
 import { useState } from "react";
 import useSWR from "swr";
 import { Label } from "./ui/label";
@@ -55,17 +55,16 @@ const LivePrices = () => {
         setApplyTo(prev => ({ ...prev, [type]: !prev[type] }));
     };
 
-    const onTpCopy = (price: number) => {
+    const onCopy = (type: "tp" | "sl", price: number) => {
         navigator.clipboard.writeText(price.toFixed(2));
-        setTpTooltipVisible(true);
-        setTimeout(() => setTpTooltipVisible(false), 2000);
-    };
-
-    const onSlCopy = (price: number) => {
-        navigator.clipboard.writeText(price.toFixed(2));
-        setSlTooltipVisible(true);
-        setTimeout(() => setSlTooltipVisible(false), 2000);
-    };
+        if (type === "tp") {
+            setTpTooltipVisible(true);
+            setTimeout(() => setTpTooltipVisible(false), 2000);
+        } else {
+            setSlTooltipVisible(true);
+            setTimeout(() => setSlTooltipVisible(false), 2000);
+        }
+    }
 
     const incrementBase = () => {
         if (percentageBase < 100) setPercentageBase(percentageBase * 10);
@@ -99,7 +98,7 @@ const LivePrices = () => {
                 <div>
                     <RadioGroupItem value="custom" id="custom" className="sr-only peer" />
                     <Label htmlFor="custom" className="flex flex-col items-center justify-between gap-2 rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary">
-                        <Image src="dollar-icon.svg" alt="btc" width={32} height={32} />
+                        <Image src="dollar-icon.svg" alt="custom" width={32} height={32} />
                         <p className="text-xl font-bold">
                             Custom Value
                         </p>
@@ -124,7 +123,6 @@ const LivePrices = () => {
                     <Input className="font-bold text-xl text-center" type="number" value={customPrice} onChange={(e) => setCustomPrice(Number(e.target.value))} />
                 </div>
             )}
-
 
             <div className="flex items-center space-x-4">
                 <div className="flex flex-col items-center justify-between space-y-16">
@@ -158,14 +156,11 @@ const LivePrices = () => {
                     </div>
                 </div>
                 <div className="flex flex-col space-y-1">
-                    {Array.from({ length: 10 }).map((_, index) => {
-                        const value = Number(((index + 1) * 0.1 * percentageBase).toFixed(1).replace(/\.0$/, ""));
-                        return (
-                            <Button variant="outline" key={value} onClick={() => handlePercentageClick(value)} className="w-[100px]">
-                                {value}%
-                            </Button>
-                        );
-                    })}
+                    {percentageValues.map(value => (
+                        <Button variant="outline" key={value} onClick={() => handlePercentageClick(value * percentageBase)} className="w-[100px]">
+                            {value * percentageBase}%
+                        </Button>
+                    ))}
                 </div>
 
                 <div className="flex flex-col items-center justify-between space-y-2">
@@ -183,7 +178,7 @@ const LivePrices = () => {
                             <p className={tradingDirection === "long" ? "text-primary" : "text-red-500"}>
                                 {formattedPrice(takeProfitPrice)}
                             </p>
-                            <Button className="relative" onClick={() => onTpCopy(takeProfitPrice)} variant="outline">
+                            <Button className="relative" onClick={() => onCopy("tp", takeProfitPrice)} variant="outline">
                                 <CopyIcon className="w-6 h-6" />
                                 {tpTooltipVisible && (
                                     <span className="absolute left-1/2 transform -translate-x-1/2 -translate-y-10 bg-primary text-white px-2 py-1 rounded-md text-xs font-bold">
@@ -208,7 +203,7 @@ const LivePrices = () => {
                             <p className={tradingDirection === "short" ? "text-primary" : "text-red-500"}>
                                 {formattedPrice(stopLossPrice)}
                             </p>
-                            <Button className="relative" onClick={() => onSlCopy(stopLossPrice)} variant="outline">
+                            <Button className="relative" onClick={() => onCopy("sl", stopLossPrice)} variant="outline">
                                 <CopyIcon className="w-6 h-6" />
                                 {slTooltipVisible && (
                                     <span className="absolute left-1/2 transform -translate-x-1/2 -translate-y-10 bg-primary text-white px-2 py-1 rounded-md text-xs font-bold">

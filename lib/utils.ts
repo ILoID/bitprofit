@@ -13,3 +13,5 @@ export const formattedPrice = (price: number) => {
 		currency: "USD",
 	}).format(price);
 }
+
+export const percentageValues = Array.from({ length: 10 }).map((_, index) => Number(((index + 1) * 0.1).toFixed(1).replace(/\.0$/, "")))
