@@ -25,16 +25,17 @@ const LivePrices = () => {
     const [tpTooltipVisible, setTpTooltipVisible] = useState<boolean>(false);
     const [slTooltipVisible, setSlTooltipVisible] = useState<boolean>(false);
 
-    if (error) return <div>failed to load</div>
-    if (!data) return <div>loading...</div>
-
     let activePrice;
-    if (selectedCoin === "bitcoin") {
-        activePrice = data.bitcoin.usd;
-    } else if (selectedCoin === "ethereum") {
-        activePrice = data.ethereum.usd;
+    if (error || !data) {
+        activePrice = 0;
     } else {
-        activePrice = customPrice;
+        if (selectedCoin === "bitcoin") {
+            activePrice = data.bitcoin.usd;
+        } else if (selectedCoin === "ethereum") {
+            activePrice = data.ethereum.usd;
+        } else {
+            activePrice = customPrice;
+        }
     }
 
     const takeProfitPrice = activePrice + (activePrice * takeProfitPercent) / 100;
@@ -120,7 +121,7 @@ const LivePrices = () => {
                     <Label className="text-2xl">
                         Enter Custom Value:
                     </Label>
-                    <Input type="number" value={customPrice} onChange={(e) => setCustomPrice(Number(e.target.value))} />
+                    <Input className="font-bold text-xl text-center" type="number" value={customPrice} onChange={(e) => setCustomPrice(Number(e.target.value))} />
                 </div>
             )}
 
